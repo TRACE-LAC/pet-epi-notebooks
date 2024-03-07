@@ -1,0 +1,30 @@
+# R and R Studio
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.Renviron
+.Rhistory
+
+# Pythhon
+*__pycache__/
+
+# Jupyter
+*.ipynb_checkpoints
+
+# knitr and R markdown
+*_cache/
+/cache/
+*_cache/
+/cache/
+*.utf8.md
+*.knit.md
+.httr-oauth
+
+# vscode
+rsconnect/
+
+# local folders
+data/
+tests/
+.vscode/
