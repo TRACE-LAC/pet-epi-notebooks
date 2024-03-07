@@ -25,6 +25,6 @@
 rsconnect/
 
 # local folders
-data/
+data/*
 tests/
 .vscode/
