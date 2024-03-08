@@ -32,7 +32,7 @@ $$
 I_t \sim Poisson\left(R_t \sum_{\tau=0}^{t-1} I_{t-\tau}\omega_t\right).
 $$
 
-This method is implemented in the R package {EpiEstim}, that allows the estimation of $R_t$ from incidence data through parametric and non-parametric methods within a Bayesian framework ([R. K. Nash et al. 2022](https://journals.plos.org/digitalhealth/article?id=10.1371/journal.pdig.0000052)). In the next section ypu will see a basic pipeline to compute the effective reproduction number using this R package.
+This method is implemented in the R package {EpiEstim}, that allows the estimation of $R_t$ from incidence data through parametric and non-parametric methods within a Bayesian framework ([R. K. Nash et al. 2022](https://journals.plos.org/digitalhealth/article?id=10.1371/journal.pdig.0000052)). In the next section you will see a basic pipeline to compute the effective reproduction number using this R package.
 
 # Computing $R_t$
 
@@ -48,7 +48,7 @@ The package{dplyr} provides useful functions to manipulate data and includes the
 
 ## Read data
 
-Before running this the code in this section, make sure that you have downloaded the COVID-19 public datasets from the selected locations. You can do so by running the `download_covid19_data.R` script:
+Before running the code in this section, make sure that you have downloaded the COVID-19 public datasets from the selected locations. You can do so by running the `download_covid19_data.R` script:
 
 ```{r, eval=FALSE}
 source("./scripts/download_covid19_data.R")
@@ -207,5 +207,9 @@ ggplot(
   facet_wrap(~city, scales = "free", ncol = 1) +
   theme_bw()
 ```
+
+<!-- $$ -->
+<!-- R(t) = \frac{I(t)}{\int_0^\infty I(t-t') \omega (t') dt'} -->
+<!-- $$ -->
 
 
