@@ -44,6 +44,11 @@ library(ggplot2)
 library(EpiEstim)
 ```
 
+```{r, echo=FALSE}
+theme_set(theme_bw(base_size = 14))
+```
+
+
 The package{dplyr} provides useful functions to manipulate data and includes the pipe symbol `%>%`, {ggplot2} is a visualization package following the principles of [The Grammar of Graphics](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=7f3e2207d2ef8fc0cee74069879c8adf35303a91), and {EpiEstim} is a tool to estimate $R_t$ from epidemic data ([A. Cori, et al. 2013](https://academic.oup.com/aje/article-abstract/178/9/1505/89262)).
 
 ## Read data
@@ -54,33 +59,30 @@ Before running the code in this section, make sure that you have downloaded the 
 source("./scripts/download_covid19_data.R")
 ```
 
-This will download and group the data to obtain daily and weekly incidence cases and deaths by location. To illustrate how to compute the effective reproduction number using {EpiEstim} we will use daily incidence data
+This will download and group the data to obtain daily and weekly incidence cases and deaths by location. To illustrate how to compute the effective reproduction number using {EpiEstim} we will use daily incidence data up to the end of 2022
 
 ```{r}
 df_covid19_daily <- read.csv("./data/covid19_cases_deaths_daily.csv") %>%
-  mutate(date = as.Date(date))
+  mutate(date = as.Date(date)) %>%
+  filter(date <= as.Date("2022-12-31"))
 ```
 
 
 A plot of the daily incidence of cases for each available location can be seen in the following figure
 ```{r, echo=FALSE}
-scale_factor <- max(df_covid19_daily$cases) / max(df_covid19_daily$cum_cases)
-
 ggplot(
   data = df_covid19_daily %>% 
     filter(city != "Santiago"),
   aes(x = date)
   ) +
-  # geom_line(aes(y = cases, color = "cases")) +
-  # geom_line(aes(y = scale_factor * cum_cases, color = "cum_cases")) +
   geom_line(aes(y = cases)) +
-  geom_line(aes(y = scale_factor * cum_cases)) +
   facet_wrap(~city, scales = "free_y", ncol = 1) +
-  scale_y_continuous(sec.axis=sec_axis(~./scale_factor, name="cum_cases")) +
-  labs(x = "date") +
-  labs(y = "cases", color = "") +
-  theme_bw() +
-  theme(legend.position="bottom")
+  labs(x = "Date of onset", y = "Reported cases") +
+  theme(
+    legend.position="bottom",
+    strip.background = element_rect(fill="white"),
+    strip.text = element_text(size = 14)
+    )
 ```
 
 ## Estimating $R_t$ with {EpiEstim}
@@ -205,11 +207,10 @@ ggplot(
     alpha = 0.4
   ) +
   facet_wrap(~city, scales = "free", ncol = 1) +
-  theme_bw()
+  labs(x = "End of window", y = "Instantaneous reproduction number") +
+  theme(
+    strip.background = element_rect(fill="white"),
+    strip.text = element_text(size = 14)
+    )
 ```
-
-<!-- $$ -->
-<!-- R(t) = \frac{I(t)}{\int_0^\infty I(t-t') \omega (t') dt'} -->
-<!-- $$ -->
-
 
