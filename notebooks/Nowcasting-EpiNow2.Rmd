@@ -1,0 +1,452 @@
+---
+title: "Nowcasting"
+author: "N T Domínguez, F S Abril, Zulma M Cucunubá"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = here::here())
+```
+
+
+Real time public health surveillance is subject to retrospective upward corrections due to the presence of occurred but not yet reported events, which reflects on the epidemic curves as a downward bias that should be corrected in order to enhance situational awareness and inform public health officials and decision making ([Gunther, Felix, et al. 2021](https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.202000112)). Statistical nowcasting methods aim to uncover current trends, predicting how strongly the preliminary data will be corrected once reporting catches up ([Wolfram, Daniel, et al. 2023](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1011394)). This can be of use to estimate the actual current needs of a public health system, informing about e.g. how many tests need to be deployed or how many hospitalizations are expected today.
+
+# Methods 
+
+Nowcasting methods estimate the total number of cases occurred on recent days given the information available at the current date. For this end, a wide variety of hierarchical Bayesian models can be implemented to estimate the currently missing reported cases computed as the difference between the available cases and the total number of cases occurred on the targeted day ([Höhle, M., & an der Heiden, M, 2014](https://onlinelibrary.wiley.com/doi/full/10.1111/biom.12194?casa_token=ScugUpQiLyYAAAAA%3AbbkkKlruJIj9ahoBxT_ZPlecikdK1sQBPnIN-WabiYLHsIzKC-ZFMXNn4W5ufqu9l3aEIZOCPEeCnv9V)). 
+
+More concretely, nowcasting methods estimate the total number of cases ocurred on day $t\in[1,T]$ given the information available at the current day $T$. For this end, consider the number of cases which occur on day $t$ and become available with a delay of $d\in[0,D]$ days, denoted as $n_{t,d}$; here $D$ represents the maximum delay to be considered. Following the notation in [Höhle, M., & an der Heiden, M, 2014](https://onlinelibrary.wiley.com/doi/full/10.1111/biom.12194?casa_token=ScugUpQiLyYAAAAA%3AbbkkKlruJIj9ahoBxT_ZPlecikdK1sQBPnIN-WabiYLHsIzKC-ZFMXNn4W5ufqu9l3aEIZOCPEeCnv9V), we denote the cases occurred on day $t$ that were reported until day $T$ as $N(t,T)$. Then the total number of cases occurred on day $t\in[T-D, ..., T]$ is given by:
+$$
+\lambda_{t} := N(t, \infty) \approx \sum_{d=0}^D n_{t,d},
+$$
+such that the currently missing reported cases are given by the difference $N(t,\infty) - N(t,T)$.
+
+In order to predict the unknown total of cases from the delayed observations, a wide variety of hierarchical Bayesian models can be implemented. These models typically consist of parts that can be flexibly specified. For instance, in ([Gunther, Felix, et al. 2021](https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.202000112)) a negative binomial model for the delayed cases was used for nowcasting the incidence of COVID-19 in Bavaria:
+
+$$
+\begin{align*}\log(\lambda_0)&\sim N(0,1) \\ \log(\lambda_t)|\lambda_{t-1}&\sim N(\log(\lambda_{t-1}),\sigma^2)\\ n_{t,d}|\lambda_t,p_{t,d} &\sim NegBinom(\lambda_t p_{t,d}, \phi)\end{align*}
+$$
+
+This model was implemented by means of MCMC estimations using *[Stan](https://mc-stan.org/users/documentation/)* (the source code can be found [here](https://github.com/FelixGuenther/nc_covid19_bavaria/tree/master)). 
+
+Nowcasting techniques were also employed during the COVID-19 pandemic to inform public health systems. In [Wolfram, Daniel, et al. (2023)](https://www.medrxiv.org/content/10.1101/2023.04.17.23288668v1) a wide variety of nowcasting models for COVID-19 hospitalization incidence in Germany are summarized and jointly analyzed. Most of the models considered there assume that the delay distribution remains roughly constant.
+
+
+
+# Basic Nowcasting pipeline with {EpiNow2}
+
+## Load packages
+
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(grates)
+library(rstan)
+library(EpiNow2)
+```
+
+```{r, echo=FALSE}
+theme_set(theme_bw(base_size = 14))
+```
+
+To set parallel running run:
+```{r, eval=FALSE}
+options(mc.cores=parallel::detectCores()/2)
+```
+
+
+## Read data
+Before running the code in this section, make sure that you have downloaded the historic COVID-19 datasets for Bogotá/Medellín, Colombia.  You can do so by running the `download_col_legacy_data.R` script: 
+
+```{r, eval=FALSE}
+source("./scripts/download_col_legacy_data.R")
+```
+
+This will download and concatenate the historic COVID-19 daily incidence data that was available during the pandemic for every week between 2020-04-07 and 2020-10-28 for this two locations.
+
+```{r, echo=FALSE}
+df_incidence_daily <- read.csv("./data/col-legacy-notification-daily-incidence.csv") %>%
+  mutate(
+    register = as.Date(register),
+    notification = as.Date(notification)
+  ) %>%
+  rbind(
+    read.csv("./data/covid19_cases_deaths_daily.csv") %>%
+      mutate(register = as.Date("2024-03-08")) %>%
+      rename(
+        notification = date,
+        incidence = cases
+        ) %>%
+      select(c(city, register, notification, incidence))
+  ) %>%
+  filter(
+    as.Date(notification) <= as.Date("2020-12-31"),
+    (city == "Bogota")
+    ) %>%
+  group_by(register) %>%
+  slice(1:(n()-14)) %>%
+  ungroup()
+```
+
+
+
+```{r, echo=FALSE, eval=FALSE}
+ggplot(data = df_incidence_daily,
+       aes(x = notification, y = incidence,
+           group = register,
+           color = as.factor(register))) +
+  # geom_point() +
+  geom_line() +
+  theme_classic()
+```
+
+```{r, echo=FALSE}
+ggplot(data = df_incidence_daily %>%
+  mutate(
+    epiweek = grates::as_epiweek(.$notification)
+  ) %>%
+  group_by(city, register, epiweek) %>%
+  summarize(incidence = sum(incidence)) %>%
+  ungroup(),
+       aes(x = epiweek, y = incidence,
+           group = register,
+           color = as.factor(register))) +
+  geom_point() +
+  geom_line() +
+  labs(
+    x = "Notification week", y = "Incidence of cases",
+    color = "Register date"
+    ) +
+  theme(
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+    strip.text = element_text(size = 14)
+    )
+```
+
+
+As a Nowcasting example, we analyse ...
+
+## Estimating the delay distribution
+
+### Reading individual data for Bogotá city:
+
+```{r}
+df_bog_individual <- read.csv("./data/col-legacy-individual.csv") %>% 
+  filter(city == "Bogota") %>%
+  mutate(
+    notification = as.Date(notification),
+    onset = as.Date(onset),
+    reporting_delay = case_when(
+      notification >= onset ~ notification - onset,
+      TRUE ~ NA
+    )
+  ) %>%
+  tidyr::drop_na(reporting_delay)
+
+delays_list <- as.integer(
+  df_bog_individual$reporting_delay
+)
+```
+
+### Assuming that the reporting delay is distributed according to a log-normal distributionm:
+
+```{r}
+stan_code <- '
+data {
+    int<lower=0> N;         // Number of data points
+    real<lower=0> y[N];     // Data sample
+}
+
+parameters {
+    real<lower=0> mu;       // Mean parameter
+    real<lower=0> sigma;    // Standard deviation parameter
+}
+
+model {
+    // Prior distribution for parameters
+    mu ~ uniform(0, 10);     // Prior on mean
+    sigma ~ uniform(0, 10);  // Prior on standard deviation
+
+    // Likelihood function
+    y ~ lognormal(mu, sigma);   // Log-normal likelihood
+}
+'
+
+stan_model <- stan_model(model_code = stan_code)
+
+stan_data <- list(
+  N = length(delays_list),
+  y = delays_list + 0.1 # Avoiding zeros in log
+)
+```
+
+<!-- Estimating the parameters of the log-normal distribution with optimization: -->
+
+```{r, eval=FALSE, echo=FALSE}
+fit_optim <- rstan::optimizing(stan_model, stan_data)
+mu_optim <- as.numeric(fit_optim$par[1])
+sigma_optim <- as.numeric(fit_optim$par[2])
+```
+
+Estimating the parameters of the log-normal distribution with sampling:
+```{r, message=FALSE}
+fit <- sampling(
+  stan_model,
+  data = stan_data,
+  chains = 4,
+  iter = 250,
+  warmup = 50
+  )
+```
+
+Extracting parameters from sampling:
+
+```{r}
+parameter_samples <- rstan::extract(fit)
+mu <- mean(parameter_samples$mu)
+sigma <- mean(parameter_samples$sigma)
+```
+
+```{r, eval=FALSE, echo=FALSE}
+mu <- 0.30937
+sigma <- 1.95194
+```
+
+```{r, echo=FALSE, warning=FALSE}
+ggplot() +
+  geom_histogram(
+    aes(x = delays_list, y = ..density..)
+    ) +
+  stat_function(
+    fun = dlnorm,
+    args = list(mean = mu, sd = sigma)
+  )
+```
+
+Defining delay distribution:
+
+```{r, warning=FALSE}
+reporting_delay <- dist_spec(
+  mean = mu, mean_sd = 0,
+  sd = sigma, sd_sd = 0,
+  distribution = "gamma",
+  max = 25
+)
+```
+
+## Defining the incubation period distribution
+
+```{r, warning=FALSE}
+incubation_period <- dist_spec(
+  # https://epiforecasts.io/covid/methods
+  mean = 5.2, mean_sd = 1.1,
+  sd = 1.52, sd_sd = 1.1,
+  distribution = "gamma",
+  max = 10
+)
+
+delay <- incubation_period + reporting_delay
+# delay$np_pmf[delay$np_pmf < 0] <- 0
+```
+
+## Defining the generation time distribution
+
+```{r}
+generation_time <- dist_spec(
+  # https://www.eurosurveillance.org/content/10.2807/1560-7917.ES.2020.25.17.2000257?crawler=true
+  mean = 3.6, mean_sd = 0.7,
+  sd = 3.1, sd_sd = 0.8,
+  distribution = "gamma",
+  max = 10
+)
+```
+
+## Defining effective reproduction number priors
+
+```{r}
+rt_prior <- list(
+  # Taken from Rt-EpiEstim.Rmd
+  mean = 3.918,
+  sd = 0.327
+)
+```
+
+```{r, echo=FALSE, eval=FALSE}
+rt_prior <- list(
+  mean = 1.,
+  sd = 1.
+)
+```
+
+
+## Implementing the model
+
+### Prepare the data for modelling
+
+```{r}
+# register_date <- as.Date("2020-07-28")
+register_date <- as.Date("2020-08-25")
+# register_date <- max(df_incidence_daily$register)
+reported_cases <- df_incidence_daily %>%
+  filter(register == register_date) %>%
+  select(notification, incidence) %>%
+  rename(
+    date = notification,
+    confirm = incidence
+  )
+
+df_real <- df_incidence_daily %>%
+    filter(
+      register == max(register)
+      ) %>%
+    select(-city, -register) %>%
+    rename(
+      date = notification,
+      confirm = incidence
+    )
+```
+
+## Finding the truncation distribution from historical data
+
+```{r}
+trunc_dates <- unique(df_incidence_daily$register)
+trunc_data <- list()
+for(i in 2:(length(trunc_dates)-1)) {
+  trunc_data[[i-1]] <- df_incidence_daily %>%
+    filter(
+      register == trunc_dates[i]
+      ) %>%
+    select(-city, -register) %>%
+    rename(
+      date = notification,
+      confirm = incidence
+    )
+}
+
+est_trunc <- estimate_truncation(
+  trunc_data,
+  verbose = interactive()
+)
+```
+
+```{r, echo=FALSE}
+plot(est_trunc)
+```
+
+## Estimating infections correcting for truncation
+```{r}
+def_trunc <- estimate_infections(
+  reported_cases,
+  generation_time = generation_time_opts(generation_time),
+  delays = delay_opts(delay),
+  rt = rt_opts(prior = rt_prior),
+  truncation = trunc_opts(est_trunc$dist)
+)
+
+```
+
+```{r, echo=FALSE, message=FALSE}
+p_trunc <- plot(def_trunc) 
+
+p_trunc[[1]] <- p_trunc[[1]] +
+  geom_line(
+    data = df_real,
+    aes(x = date, y = confirm),
+    inherit.aes = FALSE
+  )
+
+p_trunc[[3]] <- p_trunc[[3]] +
+  geom_line(
+    data = read.csv("./data/rt_regions.csv") %>%
+      mutate(date = as.Date(window_start)) %>%
+      filter(city == "Bogota"),
+    aes(x = date, y = rt_mean),
+    inherit.aes = FALSE
+  )
+
+plot(p_trunc)
+```
+
+<!-- 
+
+## Plotting the results correcting for right truncation bias 
+
+```{r}
+df_real <- df_incidence_daily %>%
+    filter(
+      register == max(register)
+      ) %>%
+    select(-city, -register) %>%
+    rename(
+      date = notification,
+      confirm = incidence
+    )
+
+x <- est_trunc$obs %>% filter(report_date == "2020-06-14")
+p <- ggplot(
+  data = x,
+  aes(x = date, y = last_confirm)
+  ) +
+  ggplot2::geom_point(
+      data = x,
+      ggplot2::aes(x = date, y = confirm)
+      )
+EpiNow2:::plot_CrIs(p,
+                    extract_CrIs(x),
+                    alpha = 0.8, linewidth = 1) +
+  geom_line(
+    # data = trunc_data[[length(trunc_dates) - 4]] %>%
+      data = trunc_data[[10]] %>%
+      filter(date >= min(x$date)),
+    aes(x = date, y = confirm)
+    ) +
+  geom_line(
+    data = df_real %>%
+      filter(date >= min(x$date), date <= max(x$date) + 10),
+    aes(x = date, y = confirm)
+  ) +
+    theme_bw() +
+    ggplot2::labs(
+      y = "Confirmed Cases", x = "Date", col = "Type", fill = "Type"
+    ) +
+    ggplot2::scale_x_date(date_breaks = "day", date_labels = "%b %d") +
+    ggplot2::scale_y_continuous(labels = scales::comma) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
+```
+
+
+### Without considering truncation distribution
+
+```{r, eval=FALSE, echo=FALSE}
+def_notrunc <- estimate_infections(
+  reported_cases,
+  generation_time = generation_time_opts(generation_time),
+  delays = delay_opts(delay),
+  rt = rt_opts(prior = rt_prior)
+  )
+```
+
+```{r, eval=FALSE, echo=FALSE}
+p_notrunc <- plot(def_notrunc)
+
+p_notrunc[[1]] <- p_notrunc[[1]] +
+  geom_line(
+    data = df_real,
+    aes(x = date, y = confirm),
+    inherit.aes = FALSE
+  )
+
+p_notrunc[[3]] <- p_notrunc[[3]] +
+  geom_line(
+    data = read.csv("./data/rt_regions.csv") %>%
+      mutate(date = as.Date(window_start)) %>%
+      filter(city == "Bogota"),
+    aes(x = date, y = rt_mean),
+    inherit.aes = FALSE
+  )
+plot(p_notrunc)
+```
+
+-->
