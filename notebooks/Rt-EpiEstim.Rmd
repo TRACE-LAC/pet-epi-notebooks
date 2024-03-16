@@ -189,6 +189,10 @@ for (city_ in cities){
 df_rt <- df_rt %>% select(c('city', 'window_start', 'window_end', 'Mean(R)', 'Quantile.0.05(R)', 'Quantile.0.975(R)'))
 colnames(df_rt) <- c(c('city', 'window_start', 'window_end', 'rt_mean', 'rt_mean_lower', 'rt_mean_upper'))
 ```
+```{r, eval=FALSE, echo=FALSE}
+write.csv(df_rt, "./data/rt_regions.csv")
+```
+
 
 ### Plotting the results
 
