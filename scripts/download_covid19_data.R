@@ -3,20 +3,22 @@ library(data.table)
 
 # Initial and final dates
 initial_date <- as.Date("2020-01-01")
-final_date <- as.Date("2022-12-31")
+final_date <- as.Date("2020-12-31")
 
 # Colombia
 url <- "https://www.datos.gov.co/api/views/gt2j-8ykr/rows.csv?accessType=DOWNLOAD"
 
 df_covid19_col_full <- fread(url) %>%
-  filter(
-    `Código DIVIPOLA municipio` %in% c(5001, 11001)
-  ) %>%
   rename(
-    onset = "Fecha de notificación",
+    notification = "Fecha de notificación",
+    onset = "Fecha de inicio de síntomas",
     death = "Fecha de muerte",
     city = "Código DIVIPOLA municipio"
   ) %>%
+  filter(
+    (as.Date(onset) >= initial_date) & (as.Date(onset) <= final_date),
+    city %in% c(5001, 11001)
+    ) %>%
   mutate(
     country = "Colombia",
     city = case_when(
@@ -25,7 +27,7 @@ df_covid19_col_full <- fread(url) %>%
       TRUE ~ "NA"
     )
   ) %>%
-  select(onset, death, country, city, Estado)
+  select(notification, onset, death, country, city, Estado)
 
 df_covid19_col <- full_join(
   df_covid19_col_full %>%
@@ -41,13 +43,15 @@ df_covid19_col <- full_join(
     date = as.Date(date)
   )
 
+write.csv(df_covid19_col_full, "./data/covid19_col_updated_individual.csv", row.names = FALSE)
+
 rm(df_covid19_col_full)
 
 # Brasil
 url <- "https://raw.githubusercontent.com/wcota/covid19br/master/cases-brazil-states.csv"
 
 df_covid19_br <- fread(url) %>%
-  select(date, country, state, newCases, newDeaths) %>%
+  select(date, country, state, newCases, newDeaths) %>% # report date
   filter(state == "DF") %>%
   rename(
     city = state,
@@ -64,7 +68,10 @@ df_covid19_br <- fread(url) %>%
 url <- "https://datos.gob.cl/dataset/8982a05a-91f7-422d-97bc-3eee08fde784/resource/8e5539b7-10b2-409b-ae5a-36dae4faf817/download/defunciones_covid19_2020_2024.csv"
 
 df_covid19_ch <- fread(url, sep = ";") %>%
-  filter(COMUNA == "Santiago") %>%
+  filter(
+    COMUNA == "Santiago",
+    CODIGO_SUBCATEGORIA_DIAG1 == "U071"
+    ) %>%
   rename(
     date = FECHA_DEF,
     city = COMUNA
@@ -102,11 +109,7 @@ df_covid19_daily <- rbind(df_covid19_col, df_covid19_br, df_covid19_ch) %>%
       as.numeric(format(date, format = "%Y")),
       "-",
       lubridate::epiweek(date)
-    ),
-    # year = as.numeric(format(date, format = "%Y")),
-    # epi_week = lubridate::epiweek(date),
-    cases = if_else(is.na(cases), 0, as.numeric(cases)),
-    deaths = if_else(is.na(deaths), 0, as.numeric(deaths)),
+    )
   ) %>%
   arrange(date) %>%
   relocate(epi_week, .after = date) %>%
