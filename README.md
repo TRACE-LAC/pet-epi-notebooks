@@ -19,13 +19,13 @@ some variables of interests in the updated dataset:
 |-------------------------|-------------------------------------------------------|---------|
 |fecha reporte web        |Date of publication in the website                     |POSIXct  |
 |fecha de notificación    |Notification date in the SIVIGILA platform             |POSIXct  |
-|Código DIVIPOLA municipio|Municipality code (11001 for Bogotá, 5001 for Medellín)|Integer  |
+|Código DIVIPOLA municipio|Municipality code (`11001` for Bogotá, `5001` for Medellín)|Integer  |
 |Nombre municipio         |Municipality name                                      |Character|
 |Edad                     |Age                                                    |Integer  |
 |Unidad de medida de edad |Age measurement unit (1-years, 2-months, 3-days)       |Integer  |
 |Sexo                     |Sex                                                    |Character|
 |Estado                   |Patient state (used to filter deceased cases)          |Character|
-|Recuperado               |Recuperado (Recovered), Fallecido (Deceased),N/A (Deceased by other causes than COVID)                                                                |Character|
+|Recuperado               |Recuperado (Recovered), Fallecido (Deceased),N/A (Deceased by other causes than COVID)                                                                            |Character|
 |Fecha de inicio de síntomas|Fecha de inicio de síntomas                          |POSIXct  |
 |Fecha de muerte          |Date of death                                          |POSIXct  |
 |Fecha de diagnóstico     |Laboratory confirmation date                           |POSIXct  |
@@ -58,7 +58,7 @@ The data set `cases-brazil-states.csv` contains the following relevant variables
 |---------------------------------|---------------------------------------------------------|-----------|
 | epi_week                        | Epidemiological week                                    | Integer   | 
 | date                            | Notification date                                       | Date      |
-| country                         | Name of the country (always `Brazil`)                   | Character |
+| country                         | Name of the country (always `"Brazil"`)                 | Character |
 | state                           | Name of the federative unit (`"DF"` for Brazilia)       | Character |
 | city                            | Name of the municipality                                | Character |
 | newDeaths                       | Number of reported new deaths                           | Integer   |
@@ -94,7 +94,7 @@ summarized data dictionary for this dataset:
 | CODIGO_COMUNA             | Code of the residence commune of the diseased                         | Integer   |
 | COMUNA                    | Residence commune of the diseased (`"Santiago"` for Santiago de Chile)| Character |
 | GLOSA_SUBCATEGORIA_DIAG1  | Cause of death                                                        | Character |
-| CODIGO_CATEGORIA_DIAG1    | Code of the cause of death (`"U071` for identified covid19 cases)     | Integer   |
+| CODIGO_CATEGORIA_DIAG1    | Code of the cause of death (`"U071"` for identified covid19 cases)     | Integer   |
 
 A complete data dictionary can be downloaded from the source. Similarly as for 
 the INS' data from Colombia, in the `download_covid19_data.R` script you can find
