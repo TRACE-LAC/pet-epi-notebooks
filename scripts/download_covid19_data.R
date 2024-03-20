@@ -1,19 +1,22 @@
 library(dplyr)
 library(data.table)
+library(stringi)
 
 # Initial and final dates
 initial_date <- as.Date("2020-01-01")
-final_date <- as.Date("2020-12-31")
+final_date <- as.Date("2021-12-31")
 
 # Colombia
 url <- "https://www.datos.gov.co/api/views/gt2j-8ykr/rows.csv?accessType=DOWNLOAD"
 
-df_covid19_col_full <- fread(url) %>%
+df_covid19_col_full <- fread(url)
+colnames(df_covid19_col_full) <- tolower(stri_trans_general(colnames(df_covid19_col_full), "Latin-ASCII"))
+df_covid19_col_full <- df_covid19_col_full %>%
   rename(
-    notification = "Fecha de notificación",
-    onset = "Fecha de inicio de síntomas",
-    death = "Fecha de muerte",
-    city = "Código DIVIPOLA municipio"
+    notification = "fecha de notificacion",
+    onset = "fecha de inicio de sintomas",
+    death = "fecha de muerte",
+    city = "codigo divipola municipio"
   ) %>%
   filter(
     (as.Date(onset) >= initial_date) & (as.Date(onset) <= final_date),
@@ -27,14 +30,14 @@ df_covid19_col_full <- fread(url) %>%
       TRUE ~ "NA"
     )
   ) %>%
-  select(notification, onset, death, country, city, Estado)
+  select(notification, onset, death, country, city, estado)
 
 df_covid19_col <- full_join(
   df_covid19_col_full %>%
     count(onset, country, city, name = "cases") %>%
     rename(date = onset),
   df_covid19_col_full %>%
-    filter(Estado == "Fallecido") %>%
+    filter(estado == "Fallecido") %>%
     count(death, country, city, name = "deaths") %>%
     rename(date = death),
   by = c("date", "country", "city")
