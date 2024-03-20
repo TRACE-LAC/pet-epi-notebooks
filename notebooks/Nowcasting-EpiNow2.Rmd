@@ -135,9 +135,9 @@ df_incidence_daily <- read.csv("./data/covid19_col_legacy_onset_daily_incidence.
 
 Note that we remove data from the last 14 days for each reporting date. This is to avoid underestimations of current cases due to extremely low incidence values. The effect of this is to effectively shift the reporting dates, which will be taken as the last onset date for each snapshot. 
 
-Plotting weekly incidence of cases makes clear the right-truncation bias present in the snapshots of the data:
+In figure 1 we plot the weekly incidence of cases. It is clear there is a right-truncation bias present in the snapshots of the data
 
-```{r legacy data plot, echo=FALSE}
+```{r legacy data plot, echo=FALSE, message=FALSE, results='hide'}
 df_incidence_weekly <- df_incidence_daily %>%
   mutate(
     epiweek = grates::as_epiweek(.$onset)
@@ -162,7 +162,7 @@ ggplot(data = df_incidence_weekly,
   geom_point() +
   geom_line() +
   labs(
-    x = "Notification week", y = "Incidence of cases",
+    x = "Date of onset", y = "Confirmed cases",
     color = "Register date"
     ) +
   scale_fill_discrete(
@@ -174,15 +174,18 @@ ggplot(data = df_incidence_weekly,
     strip.text = element_text(size = 14)
     )
 ```
+\
+**Figure 1.** Snapshots of confirmed cases of COVID-19 by date of onset in 
+Bogotá D.C. along with the updated reported cases by onset.
 
 Now, we want to correct this right truncation bias and estimate the actual number of cases for the last snapshot. To do this, we first need to correctly specify the distributions describing of the different delays present in the data. The reporting delay we are corresponds to the time that passes from the moment an individual gets infected up to the time when the case is notified in an official channel. This delay can be split in two:
 
 - **Incubation period:** Time elapsed from infection to symptoms onset
 - **Notification delay:** The time from symptom onset to notification
 
-Another important time interval that will be useful to correct this right truncation bias is known as the **generation time**, that corresponds to the time elapsed between the infection of an infector and an infectee. A schematic of these delays can be seen in the following figure:
+Another important time interval that will be useful to correct this right truncation bias is known as the **generation time**, that corresponds to the time elapsed between the infection of an infector and an infectee. A schematic of these delays can be seen in figure 2.
 
-![Delay distributions scheme](./images/delays_fig.png)
+![**Figure 2.** Delay distributions scheme](./images/delays_fig.png)
 
 ## Estimating the delay distributions
 
@@ -261,8 +264,8 @@ fit <- sampling(
   stan_model,
   data = stan_data,
   chains = 4,
-  iter = 1000,
-  warmup = 500
+  iter = 800,
+  warmup = 400
   )
 ```
 
@@ -274,6 +277,7 @@ log_mu <- mean(parameter_samples$log_mu)
 log_sigma <- mean(parameter_samples$log_sigma)
 ```
 
+The resulting distribution is plotted in figure 3.
 
 ```{r plot notification delay, echo=FALSE, warning=FALSE}
 ggplot() +
@@ -286,11 +290,13 @@ ggplot() +
   ) +
   labs(x = "delay")
 ```
+\
+**Figure 3.** Estimated notification delay log-normal distribution.
 
 Now we can define the notification delay distribution by means of the `dist_spec`
 function:
 
-```{r define notification delay}
+```{r define notification delay, warning=FALSE}
 notification_delay <- dist_spec(
   mean = log_mu,
   sd = log_sigma,
@@ -346,6 +352,8 @@ rt_prior <- list(
 
 ## Estimating the truncation distribution from historical data
 
+By means of the function `estimate_truncation` we can estimate the truncation distribution from the snapshots of the data:
+
 ```{r estimate truncation}
 trunc_dates <- unique(df_incidence_daily$register)
 trunc_data <- list()
@@ -367,10 +375,11 @@ est_trunc <- estimate_truncation(
 )
 ```
 
-
+<!--
 ```{r plot truncation, echo=FALSE}
 plot(est_trunc)
 ```
+-->
 
 ## Implementing the model
 
@@ -410,32 +419,97 @@ def_trunc <- estimate_infections(
   rt = rt_opts(prior = rt_prior),
   truncation = trunc_opts(est_trunc$dist)
 )
-
 ```
 
-```{r plot results, echo=FALSE, message=FALSE}
-p_trunc <- plot(def_trunc) 
+Summaries for the different estimations performed by {EpiNow2} can be accessed 
+formatting and filtering `def_trunc`. For instance, the estimated reported cases by onset 
+date can be accessed as (see figure 4):
+```{r, warning=FALSE}
+onset_summary <- def_trunc$summarised %>% data.table::setDT() %>% filter(variable == "reported_cases")
+```
 
-p_trunc[[1]] <- p_trunc[[1]] +
+```{r, echo=FALSE, warning=FALSE, results='hide', message=FALSE}
+plot_estimates(
+  onset_summary,
+  def_trunc$observations %>% data.table::setDT()
+  ) +
   geom_line(
-    data = df_real,
+    data = df_real %>% filter(),
     aes(x = date, y = confirm),
     inherit.aes = FALSE
   ) + 
   labs(
-    y = "Cases by \n date of onset"
-  )
-
-p_trunc[[3]] <- p_trunc[[3]] +
-  labs(y = "Effective reproduction no. \n by date of infection")
-#   geom_line(
-#     data = read.csv("./data/rt_regions.csv") %>%
-#       mutate(date = as.Date(window_start)) %>%
-#       filter(city == "Bogota"),
-#     aes(x = date, y = rt_mean),
-#     inherit.aes = FALSE
-#   )
-
-plot(p_trunc)
+    x = "Date of onset", y = "Cases"
+  ) +
+  xlim(min(onset_summary$date), max(onset_summary$date))
 ```
+\
+**Figure 4.** Nowcasting estimation of reported cases by date of onset correcting
+for right truncation bias.
+
+For times beyond the register date (vertical dashed line), the number of 
+infections is estimated by {EpiNow2} fitting an exponential curve to the final 
+week of data and extrapolating this for 7 additional days (blue). The black 
+curve in figure 4 represents the updated incidence of cases by date of onset. 
+For a more detailed exploration of forecasting methods see the 
+[*https://github.com/TRACE-LAC/pet-epi-notebooks/blob/main/notebooks/proyeccion_sktime_epi_mc.ipynb*](https://github.com/TRACE-LAC/pet-epi-notebooks/blob/main/notebooks/proyeccion_sktime_epi_mc.ipynb) 
+notebook.
+
+Similarly, for the estimated cases by date of infection:
+
+```{r}
+infection_summary <- def_trunc$summarised %>% data.table::setDT() %>% filter(variable == "infections")
+```
+
+```{r, echo=FALSE, warning=FALSE, results='hide', message=FALSE}
+plot_estimates(
+  infection_summary,
+  def_trunc$observations %>% data.table::setDT()
+  ) +
+  labs(
+    x = "Date of infection", y = "Estimated observed infections",
+    inherit.aes = FALSE
+  ) +
+  xlim(min(infection_summary$date), max(infection_summary$date)) +
+  ylim(0, 10000)
+```
+\
+**Figure 5.** Nowcasting estimation of observed infections by date of infection 
+correcting for right truncation bias.
+
+
+$R_t$ estimations were also performed by `estimate_infections` using the renewal 
+equation (see [the function's vignettes](https://epiforecasts.io/EpiNow2/dev/articles/estimate_infections.html)
+for further details)
+
+```{r, warning=FALSE}
+rt_summary <- def_trunc$summarised %>% data.table::setDT() %>% filter(variable == "R")
+```
+
+```{r, echo=FALSE, warning=FALSE, results='hide', message=FALSE}
+rt_epiestim <- read.csv("./data/rt_regions.csv") %>%
+      mutate(date = as.Date(window_start)) %>%
+      filter(city == "Bogota")
+
+plot_estimates(
+  rt_summary,
+  hline = 1
+  ) +
+  geom_line(
+    data = rt_epiestim,
+    aes(x = date, y = rt_mean),
+    inherit.aes =FALSE
+  ) +
+  labs(
+    y = "Effective reproduction number",
+    inherit.aes =FALSE
+  ) +
+  xlim(min(rt_summary$date), max(rt_summary$date)) +
+  ylim(-0.5, 4)
+```
+\
+**Figure 6.** Estimated $R_t$ using {EpiNow2}. The black line represents the 
+$R_t$ estimated using {EpiEstim} (see the 
+[*Effective Reproduction Number*](https://github.com/TRACE-LAC/pet-epi-notebooks/blob/main/notebooks/Rt-EpiEstim.Rmd)
+notebook for further details).
 
