@@ -1,5 +1,13 @@
 # PETs Challenge: Epi-examples
 
+## Challenge Description:
+
+data.org, in partnership with a global financial services institution, Harvard OpenDP, and University of Javariana, has launched a Privacy Enhancing Technologies (PETs) for Public Health Challenge. Up to five winners will be awarded $50,000 each.
+
+This pioneering competition invites academic innovators (Masters, PhDs, Postdocs, faculty, etc.) in differential privacy,  epidemiology, data science, and machine learning, etc. to create privacy solutions that will help unlock sensitive data for public health advancements and drive social impact.  
+
+You can also find more information about the challenge, timing, and funding awards, etc. by visiting Privacy-Enhancing Technologies (PETs) for Public Health Challenge - https://data.org/initiatives/pets-challenge/
+
 In this repository you will find examples for each 
 [Epidemiological decision-making policy scenario](https://data.org/initiatives/pets-challenge/about/) of the challenge 
 using open source databases available online for the 4 selected locations.
@@ -10,7 +18,7 @@ The sources for both Bogotá D.C. and Medellín cities are alocated by the
 [National Institute of Health](https://www.ins.gov.co/Noticias/Paginas/coronavirus-casos.aspx). There you will be able to find the 
 [updated cases dataset](https://www.datos.gov.co/Salud-y-Protecci-n-Social/Casos-positivos-de-COVID-19-en-Colombia-/gt2j-8ykr/data) 
 and a [historical (legacy) list of datasets](https://www.ins.gov.co/Paginas/Boletines-casos-COVID-19-Colombia.aspx) 
-corresponding to snapshots of the data available in real time. 
+corresponding to snapshots of the data available in real time.
 
 In the following table you can see a summary of 
 some variables of interests in the updated dataset:
@@ -31,7 +39,8 @@ some variables of interests in the updated dataset:
 |Fecha de diagnóstico     |Laboratory confirmation date                           |POSIXct  |
 |Fecha de recuperación    |Date of recovery                                       |POSIXct  |
 
-You can find a pipeline to read and group this dataset in the script `download_covid19_data.R`. 
+**This data ranges from March 2020 up to January 2024**. You can find a pipeline to read and group this dataset in the script 
+`download_covid19_data.R`. 
 
 The available legacy data consists of individual tables for each date. During 
 early stages of the pandemic, public health agencies had not agreed yet on what 
@@ -66,7 +75,7 @@ The data set `cases-brazil-states.csv` contains the following relevant variables
 | newCases                        | Number of reported new cases                            | Integer   |
 | totalCases                      | Total number of cases                                   | Integer   |
 
-A complete description of the dataset can be found in the 
+**This data ranges from March 2020 up to March 2023**. A complete description of the dataset can be found in the 
 [English version](https://github.com/wcota/covid19br/blob/master/README.en.md) 
 of the README in the source repository.
 
@@ -96,7 +105,8 @@ summarized data dictionary for this dataset:
 | GLOSA_SUBCATEGORIA_DIAG1  | Cause of death                                                        | Character |
 | CODIGO_CATEGORIA_DIAG1    | Code of the cause of death (`"U071"` for identified covid19 cases)     | Integer   |
 
-A complete data dictionary can be downloaded from the source. Similarly as for 
+**This data ranges from April 2020 up to February 2024**. A complete data dictionary can be downloaded from the source. Similarly as for 
 the INS' data from Colombia, in the `download_covid19_data.R` script you can find
 a simple pipeline to clean and group this dataset to obtain the daily incidence 
 of deaths.
+
