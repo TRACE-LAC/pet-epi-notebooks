@@ -8,11 +8,20 @@ This pioneering competition invites academic innovators (Masters, PhDs, Postdocs
 
 You can also find more information about the challenge, timing, and funding awards, etc. by visiting Privacy-Enhancing Technologies (PETs) for Public Health Challenge - https://data.org/initiatives/pets-challenge/
 
-In this repository you will find examples for each 
-[Epidemiological decision-making policy scenario](https://data.org/initiatives/pets-challenge/about/) of the challenge 
-using open source databases available online for the 4 selected locations.
+## Notebooks
 
-## Colombia:
+In this repository you will find examples for some of the 
+[Epidemiological decision-making policy scenario](https://data.org/initiatives/pets-challenge/about/) of the challenge 
+using open source databases available online for the 4 selected locations.The notebooks include examples on:
+
+- [Effective reproduction number estimations using {EpiEstim}](https://github.com/TRACE-LAC/pet-epi-notebooks/blob/main/notebooks/Rt-EpiEstim.Rmd) ([A. Cori, et al. 2013](https://academic.oup.com/aje/article-abstract/178/9/1505/89262)) for Bogotá D.C., 
+Medellín and Brasília
+- Nowcasting of COVID-19 cases for Bogotá D.C. using [{EpiNow2}](https://epiforecasts.io/EpiNow2/dev/index.html)
+- Forecasting of deaths in Bogotá D.C. using {sktime}
+
+## Open COVID-19 Datasets:
+
+### Colombia:
 
 The sources for both Bogotá D.C. and Medellín cities are alocated by the 
 [National Institute of Health](https://www.ins.gov.co/Noticias/Paginas/coronavirus-casos.aspx). There you will be able to find the 
@@ -56,7 +65,7 @@ notification and onset are computed grouping the data. This data is used to
 correct right truncation bias due to notfication delay in the 
 [Nowcasting notebook](https://github.com/TRACE-LAC/pet-epi-notebooks/blob/main/notebooks/Nowcasting-EpiNow2.Rmd).
 
-## Brasilia
+### Brasilia
 
 A compelling compilation of COVID-19 related data for Brazil is available in the
 [covid19br GitHub repository](https://github.com/wcota/covid19br) by Wesley Cota.
@@ -86,7 +95,7 @@ nowcasting for Brazil can be found in the
 [Observatório Covid-19 BR](https://github.com/covid19br) project, where the 
 [Nowcaster package](https://github.com/covid19br/nowcaster) is employed.
 
-## Santiago de Chile
+### Santiago de Chile
 
 Individual level data about deaths caused by COVID-19 in Santiago de Chile can 
 be found in 
