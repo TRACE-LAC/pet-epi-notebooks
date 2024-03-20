@@ -14,7 +14,7 @@ In this repository you will find examples for some of the
 [Epidemiological decision-making policy scenario](https://data.org/initiatives/pets-challenge/about/) of the challenge 
 using open source databases available online for the 4 selected locations.The notebooks include examples on:
 
-- [Effective reproduction number estimations using {EpiEstim}](https://github.com/TRACE-LAC/pet-epi-notebooks/blob/main/notebooks/Rt-EpiEstim.Rmd) ([A. Cori, et al. 2013](https://academic.oup.com/aje/article-abstract/178/9/1505/89262)) for Bogotá D.C., 
+- Effective reproduction number estimations using {EpiEstim} ([A. Cori, et al. 2013](https://academic.oup.com/aje/article-abstract/178/9/1505/89262)) for Bogotá D.C., 
 Medellín and Brasília
 - Nowcasting of COVID-19 cases for Bogotá D.C. using [{EpiNow2}](https://epiforecasts.io/EpiNow2/dev/index.html)
 - Forecasting of deaths in Bogotá D.C. using {sktime}
