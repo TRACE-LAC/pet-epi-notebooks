@@ -65,6 +65,33 @@ notification and onset are computed grouping the data. This data is used to
 correct right truncation bias due to notfication delay in the 
 [Nowcasting notebook](https://github.com/TRACE-LAC/pet-epi-notebooks/blob/main/notebooks/Nowcasting-EpiNow2.Rmd).
 
+#### Coarse-grained spatial information for Bogotá D.C.
+
+Additional spatial information at the individual level can be found in the [confirmed cases for Bogotá city published by datosabiertos.bogota.gov.co](https://datosabiertos.bogota.gov.co/dataset/numero-de-casos-confirmados-por-el-laboratorio-de-covid-19-bogota-d-c), where the column “Localidad” refers to the residence area of each case; each residence area can correspond to several postcodes according to the following table (extracted from [here](https://bogota.gov.co/mi-ciudad/gestion-publica/conoce-el-codigo-postal-de-barrio-o-localidad-en-bogota)):
+
+| Localidad          | Códigos Postales |
+| ------------------ | ---------------- |
+| Usaquén            | 110111-110151    |
+| Chapinero          | 110211-110231    |
+| Santa Fe           | 110311-110321    |
+| San Cristóbal      | 110411-110441    |
+| Usme               | 110511-110571    |
+| Tunjuelito         | 110611-110621    |
+| Bosa               | 110711-110741    |
+| Kennedy            | 110811-110881    |
+| Fontibón           | 110911-110931    |
+| Engativá           | 111011-111071    |
+| Suba               | 111111-111176    |
+| Barrios Unidos     | 111211-111221    |
+| Teusaquillo        | 111311-111321    |
+| Los Mártires       | 111411           |
+| Antonio Nariño     | 111511           |
+| Puente Aranda      | 111611-111631    |
+| La Candelaria      | 111711           |
+| Rafael Uribe Uribe | 111811-111841    |
+| Ciudad Bolívar     | 111911-111981    |
+| Sumapaz            | 112011-112041    |
+
 ### Brasilia
 
 A compelling compilation of COVID-19 related data for Brazil is available in the
