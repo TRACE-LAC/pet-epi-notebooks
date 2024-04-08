@@ -67,7 +67,7 @@ correct right truncation bias due to notfication delay in the
 
 #### Coarse-grained spatial information for Bogotá D.C.
 
-Additional spatial information at the individual level can be found in the [confirmed cases for Bogotá city published by datosabiertos.bogota.gov.co](https://datosabiertos.bogota.gov.co/dataset/numero-de-casos-confirmados-por-el-laboratorio-de-covid-19-bogota-d-c), where the column “Localidad” refers to the residence area of each case; each residence area can correspond to several postcodes according to the following table (extracted from [here](https://bogota.gov.co/mi-ciudad/gestion-publica/conoce-el-codigo-postal-de-barrio-o-localidad-en-bogota)):
+Additional spatial information at the individual level can be found in the [confirmed cases for Bogotá city published by datosabiertos.bogota.gov.co](https://datosabiertos.bogota.gov.co/dataset/numero-de-casos-confirmados-por-el-laboratorio-de-covid-19-bogota-d-c), where the column `Localidad` refers to the residence area of each case; each residence area can correspond to several postcodes according to the following table (extracted from [here](https://bogota.gov.co/mi-ciudad/gestion-publica/conoce-el-codigo-postal-de-barrio-o-localidad-en-bogota)):
 
 | Localidad          | Códigos Postales |
 | ------------------ | ---------------- |
@@ -91,6 +91,8 @@ Additional spatial information at the individual level can be found in the [conf
 | Rafael Uribe Uribe | 111811-111841    |
 | Ciudad Bolívar     | 111911-111981    |
 | Sumapaz            | 112011-112041    |
+
+Otherwise, the dataset is fairly similar to that from the INS referred above.
 
 ### Brasilia
 
