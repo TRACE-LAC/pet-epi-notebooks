@@ -43,7 +43,7 @@ some variables of interests in the updated dataset:
 |Sexo                     |Sex                                                    |Character|
 |Estado                   |Patient state (used to filter deceased cases)          |Character|
 |Recuperado               |Recuperado (Recovered), Fallecido (Deceased),N/A (Deceased by other causes than COVID)                                                                            |Character|
-|Fecha de inicio de síntomas|Fecha de inicio de síntomas                          |POSIXct  |
+|Fecha de inicio de síntomas|Date of onset                          |POSIXct  |
 |Fecha de muerte          |Date of death                                          |POSIXct  |
 |Fecha de diagnóstico     |Laboratory confirmation date                           |POSIXct  |
 |Fecha de recuperación    |Date of recovery                                       |POSIXct  |
