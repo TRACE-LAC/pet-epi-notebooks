@@ -92,8 +92,24 @@ Additional spatial information at the individual level can be found in the [conf
 | Ciudad Bolívar     | 111911-111981    |
 | Sumapaz            | 112011-112041    |
 
-Otherwise, the dataset is fairly similar to that from the INS referred above.
+Otherwise, the dataset is fairly similar to that from the INS referred above. 
+Which you can get by filtering:
 
+```r
+zipcodes_pets <- df_zipcodes %>%
+  filter((`country code` == "CO" & `admin name1` == "Antioquia" & `admin name2` == "Medellín"))
+```
+
+Similarly for all the locations:
+```r
+zipcodes_pets <- df_zipcodes %>%
+  filter(
+      (`country code` == "BR" & `admin name1` == "Distrito Federal") |
+      (`country code` == "CL" & `admin name1` == "Región Metropolitana") |
+      (`country code` == "CO" & `admin name1` == "Bogota, D.C.") |
+      (`country code` == "CO" & `admin name1` == "Antioquia" & `admin name2` == "Medellín")
+  )
+```
 ### Brasilia
 
 A compelling compilation of COVID-19 related data for Brazil is available in the
