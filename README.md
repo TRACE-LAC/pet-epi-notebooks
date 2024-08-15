@@ -67,7 +67,7 @@ correct right truncation bias due to notfication delay in the
 
 #### Coarse-grained spatial information for Bogotá D.C.
 
-Additional spatial information at the individual level can be found in the [confirmed cases for Bogotá city published by datosabiertos.bogota.gov.co](https://datosabiertos.bogota.gov.co/dataset/numero-de-casos-confirmados-por-el-laboratorio-de-covid-19-bogota-d-c), where the column `Localidad` refers to the residence area of each case; each residence area can correspond to several postcodes according to the following table (extracted from [here](https://data.opendatasoft.com/explore/dataset/geonames-postal-code@public/export/a)):
+Additional spatial information at the individual level can be found in the [confirmed cases for Bogotá city published by datosabiertos.bogota.gov.co](https://datosabiertos.bogota.gov.co/dataset/numero-de-casos-confirmados-por-el-laboratorio-de-covid-19-bogota-d-c), where the column `Localidad` refers to the residence area of each case (NOTE: As of 14/08/2024, does not have `Localidad` as before); each residence area can correspond to several postcodes according to the following table (extracted from [here](https://data.opendatasoft.com/explore/dataset/geonames-postal-code@public/export/a)):
 
 | Localidad          | Códigos Postales |
 | ------------------ | ---------------- |
